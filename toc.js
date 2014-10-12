@@ -8,6 +8,7 @@ program.version("0.9.0")
                                         "\tE.g. 1.1. Foo will become 1-1-foo instead of 11-foo. This option also\n" +
                                         "\tstrips all non-Latin and non-numeric characters from the URLs. Useful for\n" +
                                         "\tsome Markdown flavors like the GitLab Flavored Markdown")
+       .option("-d, --depth <n>", "Specifies the maximal header depth for the TOC", parseInt)
        .parse(process.argv);
 
 var FOUR_SPACES = "    ";
@@ -37,11 +38,10 @@ function processData(data) {
     var minDepth = 1000000;
     for(var i = 0; i < lines.length; i++) {
         var line = lines[i];
-        var m = line.match(/^(#+)(.*)\s*$/);
-        if (!m) continue;
-        minDepth = Math.min(minDepth, m[1].length);
-        depths.push(m[1].length);
-        titles.push(m[2]);
+        var headingLine = line.match(/^(#+)(.*)\s*$/);
+        if (!headingLine) continue;
+        minDepth = Math.min(minDepth, headingLine[1].length);
+        addHeadingLine(headingLine, depths, titles);
     }
 
     for(var i = 0; i < depths.length; i++) {
@@ -59,6 +59,13 @@ function processData(data) {
     }
     console.log(lines.join('\n'));
     //console.log('\n');
+}
+
+function addHeadingLine(headingLine, depths, titles) {
+    if(program.depth >= headingLine[1].length || !program.depth) {
+        depths.push(headingLine[1].length);
+        titles.push(headingLine[2]);
+    }
 }
 
 function createTOC(depths, titles) {
